@@ -102,10 +102,11 @@ export default function CreatePostPage() {
         .from('files')
         .getPublicUrl(filePath)
         
-      // 将链接前缀替换为自定义域名
+      // 将链接前缀替换为环境变量中的自定义域名
+      const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://ph.20204.xyz'
       const customUrl = data.publicUrl.replace(
         /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
-        'https://ph.20204.xyz'
+        storageUrl
       )
         
       return customUrl

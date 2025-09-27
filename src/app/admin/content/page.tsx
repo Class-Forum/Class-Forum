@@ -136,8 +136,8 @@ export default function AdminContentPage() {
         
         setReplies(formattedReplies)
       }
-    } catch (err: any) {
-      setError(err.message || '获取内容失败')
+    } catch (err) {
+      setError((err as Error).message || '获取内容失败')
     } finally {
       setLoading(false)
     }
@@ -166,8 +166,8 @@ export default function AdminContentPage() {
       }
       
       fetchContent()
-    } catch (err: any) {
-      setError(err.message || '删除帖子失败')
+    } catch (err) {
+      setError((err as Error).message || '删除帖子失败')
     }
   }
 
@@ -187,8 +187,8 @@ export default function AdminContentPage() {
       }
       
       fetchContent()
-    } catch (err: any) {
-      setError(err.message || '删除回复失败')
+    } catch (err) {
+      setError((err as Error).message || '删除回复失败')
     }
   }
 
@@ -205,8 +205,8 @@ export default function AdminContentPage() {
       }
       
       fetchContent()
-    } catch (err: any) {
-      setError(err.message || '更新帖子状态失败')
+    } catch (err) {
+      setError((err as Error).message || '更新帖子状态失败')
     }
   }
 
@@ -223,8 +223,8 @@ export default function AdminContentPage() {
       }
       
       fetchContent()
-    } catch (err: any) {
-      setError(err.message || '更新回复状态失败')
+    } catch (err) {
+      setError((err as Error).message || '更新回复状态失败')
     }
   }
 

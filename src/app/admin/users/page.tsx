@@ -56,8 +56,8 @@ export default function AdminUsersPage() {
       }
       
       setUsers(data || [])
-    } catch (err: any) {
-      setError(err.message || '获取用户列表失败')
+    } catch (err) {
+      setError((err as Error).message || '获取用户列表失败')
     } finally {
       setLoading(false)
     }
@@ -580,6 +580,118 @@ function BulkAddUsersForm({ onSubmit, onCancel }: {
             className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
           >
             {loading ? '添加中...' : `添加 ${preview.length} 个用户`}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+function EditUserForm({ 
+  user, 
+  onSubmit, 
+  onCancel 
+}: { 
+  user: User,
+  onSubmit: (id: number, userData: Partial<User>) => void,
+  onCancel: () => void
+}) {
+  const [username, setUsername] = useState(user.username)
+  const [role, setRole] = useState(user.role)
+  const [status, setStatus] = useState(user.status)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!username) {
+      setError('用户名不能为空')
+      return
+    }
+    
+    setLoading(true)
+    setError('')
+    
+    try {
+      await onSubmit(user.id, { username, role, status })
+    } catch (err: any) {
+      setError(err.message || '更新用户失败')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="bg-white shadow rounded-lg p-6 mb-6">
+      <h2 className="text-lg font-medium text-gray-900 mb-4">编辑用户</h2>
+      
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <label htmlFor="edit-username" className="block text-sm font-medium text-gray-700">
+              用户名
+            </label>
+            <input
+              type="text"
+              id="edit-username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700">
+              角色
+            </label>
+            <select
+              id="edit-role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            >
+              <option value="user">普通用户</option>
+              <option value="admin">管理员</option>
+            </select>
+          </div>
+          
+          <div>
+            <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700">
+              状态
+            </label>
+            <select
+              id="edit-status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            >
+              <option value="active">正常</option>
+              <option value="banned">封禁</option>
+            </select>
+          </div>
+        </div>
+        
+        <div className="mt-6 flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            取消
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          >
+            {loading ? '更新中...' : '更新用户'}
           </button>
         </div>
       </form>

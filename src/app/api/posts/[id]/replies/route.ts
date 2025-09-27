@@ -31,7 +31,7 @@ export async function GET(
     const formattedReplies = replies?.map(reply => ({
       id: reply.id,
       content: reply.content,
-      created_at: reply.created_at,
+      createdAt: reply.created_at,
       author: {
         username: '未知用户'  // 简化处理，暂不查询用户信息
       }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabaseClient'
 
 interface Post {
   id: number
@@ -119,8 +120,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
   // 渲染包含媒体的内容
   const renderContentWithMedia = (content: string) => {
     // 分割内容为行
-    const lines = content.split('
-')
+    const lines = content.split('\n')
     return (
       <>
         {lines.map((line, index) => {
@@ -128,9 +128,10 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
           if (line.match(/!\[.*\]\(.*\)/)) {
             const imageUrl = line.match(/!\[.*\]\((.*)\)/)?.[1]
             // 将链接前缀替换为自定义域名
+            const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://ph.20204.xyz'
             const customImageUrl = imageUrl?.replace(
               /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
-              'https://ph.20204.xyz'
+              storageUrl
             )
             return (
               <div key={index} className="my-4">
@@ -142,9 +143,10 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
           else if (line.match(/\[.*\]\(.*\)/) && line.includes('.mp3')) {
             const audioUrl = line.match(/\[.*\]\((.*)\)/)?.[1]
             // 将链接前缀替换为自定义域名
+            const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://ph.20204.xyz'
             const customAudioUrl = audioUrl?.replace(
               /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
-              'https://ph.20204.xyz'
+              storageUrl
             )
             return (
               <div key={index} className="my-4">
@@ -327,11 +329,11 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
                         <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                          <span className="text-gray-700 text-sm font-medium">{reply.author.username.charAt(0)}</span>
+                          <span className="text-gray-700 text-sm font-medium">{reply.author?.username?.charAt(0) || 'U'}</span>
                         </div>
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">{reply.author.username}</p>
+                        <p className="text-sm font-medium text-gray-900">{reply.author?.username || '未知用户'}</p>
                         <p className="text-sm text-gray-500">
                           {new Date(reply.createdAt).toLocaleString()}
                         </p>
