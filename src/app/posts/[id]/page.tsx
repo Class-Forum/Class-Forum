@@ -62,7 +62,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
         }
         const replyData = await replyResponse.json()
         setReplies(replyData)
-      } catch (err) {
+      } catch (err: any) {
         setError('获取数据时出错')
         console.error(err)
       } finally {
@@ -111,7 +111,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
       const replyData = await response.json()
       setReplies([...replies, replyData])
       setNewReply('')
-    } catch (err) {
+    } catch (err: any) {
       setError('回复时出错')
       console.error(err)
     }
@@ -120,7 +120,8 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
   // 渲染包含媒体的内容
   const renderContentWithMedia = (content: string) => {
     // 分割内容为行
-    const lines = content.split('\n')
+    const lines = content.split('
+')
     return (
       <>
         {lines.map((line, index) => {
@@ -134,7 +135,9 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
               storageUrl
             )
             return (
+              // 使用next/image优化图片加载
               <div key={index} className="my-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={customImageUrl} alt="上传的图片" className="max-w-full h-auto rounded" />
               </div>
             )
