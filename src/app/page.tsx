@@ -72,9 +72,9 @@ export default function HomePage() {
         })) || []
         
         setPosts(formattedPosts)
-      } catch (err: any) {
+      } catch (err) {
         console.error('获取帖子时出错:', err)
-        setError(err.message || '获取帖子时出错')
+        setError((err as Error).message || '获取帖子时出错')
       } finally {
         setLoading(false)
       }
