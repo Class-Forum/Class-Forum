@@ -62,7 +62,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
         }
         const replyData = await replyResponse.json()
         setReplies(replyData)
-      } catch (err: any) {
+      } catch (err) {
         setError('获取数据时出错')
         console.error(err)
       } finally {
@@ -111,7 +111,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
       const replyData = await response.json()
       setReplies([...replies, replyData])
       setNewReply('')
-    } catch (err: any) {
+    } catch (err) {
       setError('回复时出错')
       console.error(err)
     }
