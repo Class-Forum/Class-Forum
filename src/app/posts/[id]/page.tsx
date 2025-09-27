@@ -120,8 +120,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
   // 渲染包含媒体的内容
   const renderContentWithMedia = (content: string) => {
     // 分割内容为行
-    const lines = content.split('
-')
+    const lines = content.split('\n')
     return (
       <>
         {lines.map((line, index) => {
