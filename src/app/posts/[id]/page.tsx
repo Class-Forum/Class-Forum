@@ -17,7 +17,7 @@ interface Post {
   replies: {
     id: number
   }[]
-  createdAt: string
+  created_at: string
 }
 
 interface Reply {
@@ -26,7 +26,7 @@ interface Reply {
   author: {
     username: string
   }
-  createdAt: string
+  created_at: string
 }
 
 export default function PostPage({ params }: { params: Promise<{ id: string }> }) {
@@ -303,7 +303,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-900">{post.author.username}</p>
                   <p className="text-sm text-gray-500">
-                    发布于 {new Date(post.createdAt).toLocaleDateString()}
+                    发布于 {new Date(post.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -337,7 +337,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
                       <div className="ml-3">
                         <p className="text-sm font-medium text-gray-900">{reply.author?.username || '未知用户'}</p>
                         <p className="text-sm text-gray-500">
-                          {new Date(reply.createdAt).toLocaleString()}
+                          {new Date(reply.created_at).toLocaleString()}
                         </p>
                       </div>
                     </div>

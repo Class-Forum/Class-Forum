@@ -23,10 +23,13 @@ export async function POST(request: Request) {
     }
     
     if (data.user) {
-      // 注册成功后，更新用户的用户名
+      // 注册成功后，更新用户的用户名和角色
       const { error: updateError } = await supabaseServer
         .from('users')
-        .update({ username })
+        .update({ 
+          username,
+          role: 'user'  // 默认角色为普通用户
+        })
         .eq('id', data.user.id)
       
       if (updateError) {

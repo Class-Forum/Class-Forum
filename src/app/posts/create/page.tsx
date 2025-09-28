@@ -97,12 +97,83 @@ export default function CreatePostPage() {
 
       const userId = session.user.id
 
+      // 准备帖子内容
+      let finalContent = content;
+
+      // 上传图片文件
+      if (imageFile) {
+        try {
+          const fileExt = imageFile.name.split('.').pop()
+          const fileName = `${Date.now()}_${Math.random()}.${fileExt}`
+          const filePath = `images/${fileName}`
+          
+          const { error: uploadError } = await supabase.storage
+            .from('files')
+            .upload(filePath, imageFile)
+            
+          if (uploadError) {
+            throw new Error('图片上传失败: ' + uploadError.message)
+          }
+          
+          // 获取公共URL
+          const { data } = supabase.storage
+            .from('files')
+            .getPublicUrl(filePath)
+            
+          // 将链接前缀替换为环境变量中的自定义域名
+          const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://ph.20204.xyz'
+          const customUrl = data.publicUrl.replace(
+            /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
+            storageUrl
+          )
+            
+          // 在内容中添加图片链接
+          finalContent = `${finalContent}\n\n![图片](${customUrl})`
+        } catch (uploadErr) {
+          throw new Error('图片上传失败: ' + (uploadErr as Error).message)
+        }
+      }
+
+      // 上传音频文件
+      if (audioFile) {
+        try {
+          const fileExt = audioFile.name.split('.').pop()
+          const fileName = `${Date.now()}_${Math.random()}.${fileExt}`
+          const filePath = `audio/${fileName}`
+          
+          const { error: uploadError } = await supabase.storage
+            .from('files')
+            .upload(filePath, audioFile)
+            
+          if (uploadError) {
+            throw new Error('音频上传失败: ' + uploadError.message)
+          }
+          
+          // 获取公共URL
+          const { data } = supabase.storage
+            .from('files')
+            .getPublicUrl(filePath)
+            
+          // 将链接前缀替换为环境变量中的自定义域名
+          const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://ph.20204.xyz'
+          const customUrl = data.publicUrl.replace(
+            /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
+            storageUrl
+          )
+            
+          // 在内容中添加音频链接
+          finalContent = `${finalContent}\n\n[音频文件](${customUrl})`
+        } catch (uploadErr) {
+          throw new Error('音频上传失败: ' + (uploadErr as Error).message)
+        }
+      }
+
       // 创建帖子
       const { data, error } = await supabase
         .from('posts')
         .insert({
           title,
-          content,
+          content: finalContent,
           author_id: userId,
           category_id: parseInt(categoryId)
         })
