@@ -365,8 +365,8 @@ function AddUserForm({ onSubmit, onCancel }: {
     
     try {
       await onSubmit(username, password, role)
-    } catch (err: any) {
-      setError(err.message || '添加用户失败')
+    } catch (err) {
+      setError((err as Error).message || '添加用户失败')
     } finally {
       setLoading(false)
     }
@@ -505,11 +505,11 @@ function BulkAddUsersForm({ onSubmit, onCancel }: {
       setError('')
       
       await onSubmit(userData)
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof SyntaxError) {
         setError('JSON格式无效')
       } else {
-        setError(err.message || '批量添加用户失败')
+        setError((err as Error).message || '批量添加用户失败')
       }
     } finally {
       setLoading(false)
@@ -614,8 +614,8 @@ function EditUserForm({
     
     try {
       await onSubmit(user.id, { username, role, status })
-    } catch (err: any) {
-      setError(err.message || '更新用户失败')
+    } catch (err) {
+      setError((err as Error).message || '更新用户失败')
     } finally {
       setLoading(false)
     }

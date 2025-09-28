@@ -56,7 +56,7 @@ export default function UserSettingsPage() {
         setSuccessMessage('个人信息已更新')
         setTimeout(() => setSuccessMessage(''), 3000)
       }
-    } catch (error: any) {
+    } catch (error) {
       setErrorMessage('更新个人信息时出错')
     }
   }
@@ -85,7 +85,7 @@ export default function UserSettingsPage() {
         setConfirmPassword('')
         setTimeout(() => setSuccessMessage(''), 3000)
       }
-    } catch (error: any) {
+    } catch (error) {
       setErrorMessage('更改密码时出错')
     }
   }

@@ -58,8 +58,11 @@ export default function AdminContentPage() {
     }
 
     checkAdminPermission()
+  }, [router])
+
+  useEffect(() => {
     fetchContent()
-  }, [activeTab, router])
+  }, [activeTab])
 
   const fetchContent = async () => {
     try {

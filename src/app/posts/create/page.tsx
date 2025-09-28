@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import Image from 'next/image'
 
 export default function CreatePostPage() {
   const [title, setTitle] = useState('')
@@ -256,7 +257,7 @@ export default function CreatePostPage() {
                   </div>
                   {imagePreview && (
                     <div className="mt-2">
-                      <img src={imagePreview} alt="预览" className="max-h-40 rounded" />
+                      <Image src={imagePreview} alt="预览" width={200} height={200} className="max-h-40 rounded" />
                     </div>
                   )}
                 </div>
