@@ -30,7 +30,7 @@ export default function LoginPage() {
         router.push('/')
         router.refresh()
       }
-    } catch (err) {
+    } catch (_err) {
       setError('登录过程中发生错误')
     } finally {
       setLoading(false)

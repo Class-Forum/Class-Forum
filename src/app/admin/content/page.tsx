@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -60,11 +60,7 @@ export default function AdminContentPage() {
     checkAdminPermission()
   }, [router])
 
-  useEffect(() => {
-    fetchContent()
-  }, [activeTab])
-
-  const fetchContent = async () => {
+  const fetchContent = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -144,7 +140,7 @@ export default function AdminContentPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [activeTab])
 
   const handleDeletePost = async (id: number) => {
     if (!confirm('确定要删除这个帖子吗？此操作不可恢复。')) {

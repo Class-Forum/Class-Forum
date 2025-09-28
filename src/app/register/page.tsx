@@ -60,7 +60,7 @@ export default function RegisterPage() {
           }, 3000)
         }
       }
-    } catch (err) {
+    } catch (_err) {
       setError('注册过程中发生错误')
     } finally {
       setLoading(false)

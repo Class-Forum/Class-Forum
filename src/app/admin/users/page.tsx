@@ -82,8 +82,8 @@ export default function AdminUsersPage() {
       
       setIsAddingUser(false)
       fetchUsers()
-    } catch (err: any) {
-      setError(err.message || '添加用户失败')
+    } catch (err) {
+      setError((err as Error).message || '添加用户失败')
     }
   }
 
@@ -108,8 +108,8 @@ export default function AdminUsersPage() {
       
       setIsBulkAdding(false)
       fetchUsers()
-    } catch (err: any) {
-      setError(err.message || '批量添加用户失败')
+    } catch (err) {
+      setError((err as Error).message || '批量添加用户失败')
     }
   }
 
@@ -126,8 +126,8 @@ export default function AdminUsersPage() {
       
       setEditingUser(null)
       fetchUsers()
-    } catch (err: any) {
-      setError(err.message || '更新用户失败')
+    } catch (err) {
+      setError((err as Error).message || '更新用户失败')
     }
   }
 
@@ -159,8 +159,8 @@ export default function AdminUsersPage() {
       }
       
       fetchUsers()
-    } catch (err: any) {
-      setError(err.message || '删除用户失败')
+    } catch (err) {
+      setError((err as Error).message || '删除用户失败')
     }
   }
 
@@ -177,8 +177,8 @@ export default function AdminUsersPage() {
       }
       
       fetchUsers()
-    } catch (err: any) {
-      setError(err.message || '更新用户状态失败')
+    } catch (err) {
+      setError((err as Error).message || '更新用户状态失败')
     }
   }
 
@@ -479,7 +479,7 @@ function BulkAddUsersForm({ onSubmit, onCancel }: {
       } else {
         setPreview([])
       }
-    } catch (err) {
+    } catch (_err) {
       setError('JSON格式无效')
       setPreview([])
     }

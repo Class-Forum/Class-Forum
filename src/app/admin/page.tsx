@@ -23,8 +23,8 @@ export default function AdminPage() {
           // 为了简化，我们假设任何登录用户都可以访问管理员面板
           setIsLoggedIn(true)
         }
-      } catch (error) {
-        console.error('检查管理员状态失败:', error)
+      } catch (_error) {
+        console.error('检查管理员状态失败:', _error)
       } finally {
         setLoading(false)
       }

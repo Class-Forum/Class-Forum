@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function UserSettingsPage() {
-  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [username, setUsername] = useState('')
@@ -56,7 +55,7 @@ export default function UserSettingsPage() {
         setSuccessMessage('个人信息已更新')
         setTimeout(() => setSuccessMessage(''), 3000)
       }
-    } catch (error) {
+    } catch (_error) {
       setErrorMessage('更新个人信息时出错')
     }
   }
@@ -85,7 +84,7 @@ export default function UserSettingsPage() {
         setConfirmPassword('')
         setTimeout(() => setSuccessMessage(''), 3000)
       }
-    } catch (error) {
+    } catch (_error) {
       setErrorMessage('更改密码时出错')
     }
   }

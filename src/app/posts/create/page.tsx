@@ -10,10 +10,8 @@ export default function CreatePostPage() {
   const [content, setContent] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([])
-  const [imageFile, setImageFile] = useState<File | null>(null)
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -81,39 +79,6 @@ export default function CreatePostPage() {
       }
       
       setAudioFile(file)
-    }
-  }
-
-  const uploadFile = async (file: File, folder: string) => {
-    try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `${folder}/${fileName}`
-      
-      const { error: uploadError } = await supabase.storage
-        .from('files')
-        .upload(filePath, file)
-        
-      if (uploadError) {
-        throw new Error(uploadError.message)
-      }
-      
-      // 获取公共URL
-      const { data } = supabase.storage
-        .from('files')
-        .getPublicUrl(filePath)
-        
-      // 将链接前缀替换为环境变量中的自定义域名
-      const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://ph.20204.xyz'
-      const customUrl = data.publicUrl.replace(
-        /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
-        storageUrl
-      )
-        
-      return customUrl
-    } catch (err) {
-      console.error('上传文件失败:', err)
-      throw err
     }
   }
 
