@@ -19,12 +19,25 @@ export default function AdminPage() {
         const { data: { user } } = await supabase.auth.getUser()
         
         if (user) {
-          // 这里应该检查用户是否具有管理员角色
-          // 为了简化，我们假设任何登录用户都可以访问管理员面板
-          setIsLoggedIn(true)
+          // 检查用户是否为管理员
+          const { data: userData, error } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+          
+          if (error) {
+            console.error('获取用户角色失败:', error)
+            setError('获取用户信息失败')
+          } else if (userData && userData.role === 'admin') {
+            setIsLoggedIn(true)
+          } else {
+            setError('您没有管理员权限')
+          }
         }
       } catch (_error) {
         console.error('检查管理员状态失败:', _error)
+        setError('检查管理员状态失败')
       } finally {
         setLoading(false)
       }
@@ -48,9 +61,20 @@ export default function AdminPage() {
       if (error) {
         setError(error.message)
       } else if (data.user) {
-        // 这里应该检查用户是否具有管理员角色
-        // 为了简化，我们假设任何登录用户都可以访问管理员面板
-        setIsLoggedIn(true)
+        // 检查用户是否为管理员
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', data.user.id)
+          .single()
+        
+        if (userError) {
+          setError('获取用户信息失败: ' + userError.message)
+        } else if (userData && userData.role === 'admin') {
+          setIsLoggedIn(true)
+        } else {
+          setError('您没有管理员权限')
+        }
       }
     } catch (err) {
       setError('登录过程中发生错误')

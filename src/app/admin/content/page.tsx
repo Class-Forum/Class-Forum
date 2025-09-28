@@ -50,8 +50,19 @@ export default function AdminContentPage() {
           return
         }
         
-        // 这里应该检查用户是否是管理员
-        // 为简化起见，我们假设能访问此页面的都是管理员
+        // 检查用户是否为管理员
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        
+        if (error) {
+          console.error('获取用户角色失败:', error)
+          router.push('/admin')
+        } else if (userData && userData.role !== 'admin') {
+          router.push('/admin')
+        }
       } catch (error) {
         console.error('检查权限失败:', error)
         router.push('/admin')
