@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import Image from 'next/image'
+import ReactMarkdown from 'react-markdown'
 
 export default function CreatePostPage() {
   const [title, setTitle] = useState('')
@@ -15,6 +15,7 @@ export default function CreatePostPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isPreview, setIsPreview] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -266,18 +267,52 @@ export default function CreatePostPage() {
                 </div>
                 
                 <div className="mb-4">
-                  <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-                    内容
-                  </label>
-                  <textarea
-                    id="content"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    rows={8}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md px-3 py-2"
-                    placeholder="输入帖子内容"
-                    required
-                  />
+                  <div className="flex justify-between items-center mb-1">
+                    <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+                      内容
+                    </label>
+                    <div className="flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsPreview(false)}
+                        className={`px-3 py-1 text-sm rounded ${!isPreview ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'}`}
+                      >
+                        编辑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsPreview(true)}
+                        className={`px-3 py-1 text-sm rounded ${isPreview ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'}`}
+                      >
+                        预览
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {isPreview ? (
+                    <div className="border border-gray-300 rounded-md p-3 min-h-[200px]">
+                      <div className="prose max-w-none">
+                        <ReactMarkdown>
+                          {content}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                  ) : (
+                    <textarea
+                      id="content"
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      rows={8}
+                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="输入帖子内容，支持Markdown语法..."
+                      required
+                    />
+                  )}
+                  
+                  <div className="mt-2 text-xs text-gray-500">
+                    支持Markdown语法：**粗体** *斜体* `代码` # 标题 ## 子标题
+                    [链接](url) ![图片](url)
+                  </div>
                 </div>
                 
                 <div className="mb-4">
@@ -294,7 +329,7 @@ export default function CreatePostPage() {
                   </div>
                   {imagePreview && (
                     <div className="mt-2">
-                      <Image src={imagePreview} alt="预览" width={200} height={200} className="max-h-40 rounded" />
+                      <img src={imagePreview} alt="预览" className="max-h-40 rounded" />
                     </div>
                   )}
                 </div>

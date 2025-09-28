@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import ReactMarkdown from 'react-markdown'
 
 interface Post {
   id: number
@@ -115,65 +116,6 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
       setError('回复时出错')
       console.error(err)
     }
-  }
-
-  // 渲染包含媒体的内容
-  const renderContentWithMedia = (content: string) => {
-    // 分割内容为行
-    const lines = content.split('\n')
-    return (
-      <>
-        {lines.map((line, index) => {
-          // 检查是否为图片链接
-          if (line.match(/!\[.*\]\(.*\)/)) {
-            const imageUrl = line.match(/!\[.*\]\((.*)\)/)?.[1]
-            // 将链接前缀替换为自定义域名
-            const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://ph.20204.xyz'
-            const customImageUrl = imageUrl?.replace(
-              /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
-              storageUrl
-            )
-            return (
-              // 使用next/image优化图片加载
-              <div key={index} className="my-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={customImageUrl} alt="上传的图片" className="max-w-full h-auto rounded" />
-              </div>
-            )
-          }
-          // 检查是否为音频链接
-          else if (line.match(/\[.*\]\(.*\)/) && line.includes('.mp3')) {
-            const audioUrl = line.match(/\[.*\]\((.*)\)/)?.[1]
-            // 将链接前缀替换为自定义域名
-            const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://ph.20204.xyz'
-            const customAudioUrl = audioUrl?.replace(
-              /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
-              storageUrl
-            )
-            return (
-              <div key={index} className="my-4">
-                <audio controls className="w-full">
-                  <source src={customAudioUrl} type="audio/mpeg" />
-                  您的浏览器不支持音频元素。
-                </audio>
-              </div>
-            )
-          }
-          // 普通文本行
-          else if (line.trim() !== '') {
-            return (
-              <p key={index} className="mb-4">
-                {line}
-              </p>
-            )
-          }
-          // 空行
-          else {
-            return <br key={index} />
-          }
-        })}
-      </>
-    )
   }
 
   if (loading) {
@@ -314,7 +256,19 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
           </div>
           <div className="px-4 py-5 sm:p-6">
             <div className="prose max-w-none text-gray-700">
-              {renderContentWithMedia(post.content)}
+              <ReactMarkdown 
+                components={{
+                  img: ({node, ...props}) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img {...props} className="max-w-full h-auto rounded" alt={props.alt || "图片"} />
+                  ),
+                  audio: ({node, ...props}) => (
+                    <audio {...props} controls className="w-full" />
+                  )
+                }}
+              >
+                {post.content}
+              </ReactMarkdown>
             </div>
           </div>
         </div>
@@ -342,7 +296,11 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
                       </div>
                     </div>
                     <div className="mt-2 ml-11">
-                      <p className="text-gray-700">{reply.content}</p>
+                      <div className="text-gray-700">
+                        <ReactMarkdown>
+                          {reply.content}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -361,18 +319,22 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
             <form onSubmit={handleReplySubmit}>
               <div>
                 <label htmlFor="reply" className="block text-sm font-medium text-gray-700">
-                  回复内容
+                  回复内容 (支持Markdown语法)
                 </label>
                 <div className="mt-1">
                   <textarea
                     id="reply"
                     value={newReply}
                     onChange={(e) => setNewReply(e.target.value)}
-                    placeholder="输入你的回复..."
+                    placeholder="输入你的回复，支持Markdown语法..."
                     className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md p-3"
                     rows={4}
                     required
                   />
+                </div>
+                <div className="mt-1 text-xs text-gray-500">
+                  支持Markdown语法：**粗体** *斜体* `代码` # 标题 ## 子标题
+                  [链接](url) ![图片](url)
                 </div>
               </div>
               <div className="mt-4">
