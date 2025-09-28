@@ -10,6 +10,7 @@ export default function CreatePostPage() {
   const [content, setContent] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([])
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -117,7 +118,7 @@ export default function CreatePostPage() {
       router.refresh()
     } catch (err) {
       console.error('发布帖子失败:', err)
-      setError(err.message || '发布帖子失败')
+      setError((err as Error).message || '发布帖子失败')
     } finally {
       setLoading(false)
     }
@@ -256,10 +257,10 @@ export default function CreatePostPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={loading || uploading}
+                    disabled={loading}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
                   >
-                    {uploading ? '上传中...' : loading ? '发布中...' : '发布帖子'}
+                    {loading ? '发布中...' : '发布帖子'}
                   </button>
                 </div>
               </form>

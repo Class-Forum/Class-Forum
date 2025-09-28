@@ -79,7 +79,6 @@ export default function UserSettingsPage() {
         setErrorMessage(error.message)
       } else {
         setSuccessMessage('密码已更改')
-        setCurrentPassword('')
         setNewPassword('')
         setConfirmPassword('')
         setTimeout(() => setSuccessMessage(''), 3000)

@@ -27,6 +27,7 @@ interface Reply {
   post: {
     title: string
   }
+  post_id: number
   status: string
   created_at: string
 }
@@ -90,10 +91,10 @@ export default function AdminContentPage() {
           title: post.title,
           content: post.content,
           author: {
-            username: post.users?.username || '未知用户'
+            username: post.users && post.users.length > 0 ? post.users[0].username : '未知用户'
           },
           category: {
-            name: post.categories?.name || '未分类'
+            name: post.categories && post.categories.length > 0 ? post.categories[0].name : '未分类'
           },
           status: post.status || 'active',
           created_at: post.created_at
@@ -124,11 +125,12 @@ export default function AdminContentPage() {
           id: reply.id,
           content: reply.content,
           author: {
-            username: reply.users?.username || '未知用户'
+            username: reply.users && reply.users.length > 0 ? reply.users[0].username : '未知用户'
           },
           post: {
-            title: reply.posts?.title || '未知帖子'
+            title: reply.posts && reply.posts.length > 0 ? reply.posts[0].title : '未知帖子'
           },
+          post_id: reply.post_id,
           status: reply.status || 'active',
           created_at: reply.created_at
         })) || []
