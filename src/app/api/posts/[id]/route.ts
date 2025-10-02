@@ -152,12 +152,12 @@ export async function PUT(
       }, { status: 401 })
     }
     
-    console.log('[Post Detail API] 当前用户ID:', user.id)
+    console.log('[Post Detail API] 当前用户email:', user.email)
     
     // 检查帖子是否存在以及用户是否有权限编辑
     const { data: post, error: postError } = await supabaseServer
       .from('posts')
-      .select('author_id')
+      .select('author_id, users(email)')
       .eq('id', parseInt(id))
       .single()
     
@@ -177,25 +177,41 @@ export async function PUT(
     }
     
     // 检查用户权限：只有帖子作者或管理员可以编辑帖子
+    // 通过email关联Supabase认证用户和数据库用户
     const { data: userData, error: userError } = await supabaseServer
       .from('users')
-      .select('role')
-      .eq('id', user.id)
+      .select('id, role')
+      .eq('email', user.email)
       .single()
     
     if (userError) {
       console.error('[Post Detail API] 用户查询错误:', userError)
       return NextResponse.json({ 
         error: '权限验证失败',
-        details: userError.message
+        details: '无法验证用户权限'
       }, { status: 500 })
     }
     
-    const isAuthor = post.author_id.toString() === user.id
+    if (!userData) {
+      console.error('[Post Detail API] 用户未找到')
+      return NextResponse.json({ 
+        error: '权限验证失败',
+        details: '用户信息不存在'
+      }, { status: 403 })
+    }
+    
+    // 获取帖子作者信息
+    const { data: authorData } = await supabaseServer
+      .from('users')
+      .select('email')
+      .eq('id', post.author_id)
+      .single()
+    
+    const isAuthor = authorData?.email === user.email
     const isAdmin = userData?.role === 'admin'
     
     if (!isAuthor && !isAdmin) {
-      console.error('[Post Detail API] 权限不足:', { userId: user.id, authorId: post.author_id, isAdmin })
+      console.error('[Post Detail API] 权限不足:', { userEmail: user.email, authorEmail: authorData?.email, isAdmin })
       return NextResponse.json({ 
         error: '权限不足',
         details: '只有帖子作者或管理员可以编辑帖子'
@@ -285,7 +301,7 @@ export async function DELETE(
       }, { status: 401 })
     }
     
-    console.log('[Post Detail API] 当前用户ID:', user.id)
+    console.log('[Post Detail API] 当前用户email:', user.email)
     
     // 检查帖子是否存在以及用户是否有权限删除
     const { data: post, error: postError } = await supabaseServer
@@ -310,25 +326,41 @@ export async function DELETE(
     }
     
     // 检查用户权限：只有帖子作者或管理员可以删除帖子
+    // 通过email关联Supabase认证用户和数据库用户
     const { data: userData, error: userError } = await supabaseServer
       .from('users')
-      .select('role')
-      .eq('id', user.id)
+      .select('id, role')
+      .eq('email', user.email)
       .single()
     
     if (userError) {
       console.error('[Post Detail API] 用户查询错误:', userError)
       return NextResponse.json({ 
         error: '权限验证失败',
-        details: userError.message
+        details: '无法验证用户权限'
       }, { status: 500 })
     }
     
-    const isAuthor = post.author_id.toString() === user.id
+    if (!userData) {
+      console.error('[Post Detail API] 用户未找到')
+      return NextResponse.json({ 
+        error: '权限验证失败',
+        details: '用户信息不存在'
+      }, { status: 403 })
+    }
+    
+    // 获取帖子作者信息
+    const { data: authorData } = await supabaseServer
+      .from('users')
+      .select('email')
+      .eq('id', post.author_id)
+      .single()
+    
+    const isAuthor = authorData?.email === user.email
     const isAdmin = userData?.role === 'admin'
     
     if (!isAuthor && !isAdmin) {
-      console.error('[Post Detail API] 权限不足:', { userId: user.id, authorId: post.author_id, isAdmin })
+      console.error('[Post Detail API] 权限不足:', { userEmail: user.email, authorEmail: authorData?.email, isAdmin })
       return NextResponse.json({ 
         error: '权限不足',
         details: '只有帖子作者或管理员可以删除帖子'
