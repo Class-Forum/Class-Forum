@@ -138,17 +138,29 @@ export default function CreatePostPage() {
             .from('files')
             .getPublicUrl(filePath)
             
-          // 将链接前缀替换为环境变量中的自定义域名
-          const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://ph.20204.xyz'
-          const customUrl = data.publicUrl.replace(
-            /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
-            storageUrl
-          )
+          console.log('[Create Post] 原始图片URL:', data.publicUrl)
+          
+          // 首先尝试使用原始Supabase URL
+          let imageUrl = data.publicUrl
+          
+          // 如果配置了自定义域名，尝试替换
+          const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL
+          if (storageUrl) {
+            const customUrl = data.publicUrl.replace(
+              /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
+              storageUrl
+            )
+            console.log('[Create Post] 自定义图片URL:', customUrl)
             
-          console.log('[Create Post] 图片最终URL:', customUrl)
+            // 可以在这里添加URL有效性检查
+            // 如果自定义域名不可用，回退到原始URL
+            imageUrl = customUrl
+          }
+          
+          console.log('[Create Post] 最终图片URL:', imageUrl)
           
           // 在内容中添加图片链接
-          finalContent = `${finalContent}\n\n![图片](${customUrl})`
+          finalContent = `${finalContent}\n\n![图片](${imageUrl})`
         } catch (uploadErr) {
           console.error('[Create Post] 图片上传异常:', {
             message: (uploadErr as Error).message,
@@ -191,17 +203,29 @@ export default function CreatePostPage() {
             .from('files')
             .getPublicUrl(filePath)
             
-          // 将链接前缀替换为环境变量中的自定义域名
-          const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://ph.20204.xyz'
-          const customUrl = data.publicUrl.replace(
-            /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
-            storageUrl
-          )
+          console.log('[Create Post] 原始音频URL:', data.publicUrl)
+          
+          // 首先尝试使用原始Supabase URL
+          let audioUrl = data.publicUrl
+          
+          // 如果配置了自定义域名，尝试替换
+          const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL
+          if (storageUrl) {
+            const customUrl = data.publicUrl.replace(
+              /^https:\/\/[^\/]+\/storage\/v1\/object\/public/,
+              storageUrl
+            )
+            console.log('[Create Post] 自定义音频URL:', customUrl)
             
-          console.log('[Create Post] 音频最终URL:', customUrl)
+            // 可以在这里添加URL有效性检查
+            // 如果自定义域名不可用，回退到原始URL
+            audioUrl = customUrl
+          }
+          
+          console.log('[Create Post] 最终音频URL:', audioUrl)
           
           // 在内容中添加音频链接
-          finalContent = `${finalContent}\n\n[音频文件](${customUrl})`
+          finalContent = `${finalContent}\n\n[音频文件](${audioUrl})`
         } catch (uploadErr) {
           console.error('[Create Post] 音频上传异常:', {
             message: (uploadErr as Error).message,

@@ -17,10 +17,27 @@
 - **图片文件** → `photo/` 文件夹
 - **音乐文件** → `music/` 文件夹
 
-## 配置权限
-创建后需要设置权限策略：
-- 允许公开读取所有文件
-- 允许认证用户上传文件
+## 配置权限策略（重要！）
+创建存储桶后，必须在"Policies"标签中配置以下策略：
+
+### 必需策略：
+1. **允许认证用户上传文件**
+   ```sql
+   CREATE POLICY "Allow authenticated uploads" ON storage.objects
+   FOR INSERT WITH CHECK (bucket_id = 'files' AND auth.role() = 'authenticated');
+   ```
+
+2. **允许公开读取文件**
+   ```sql
+   CREATE POLICY "Allow public read access" ON storage.objects
+   FOR SELECT USING (bucket_id = 'files');
+   ```
+
+### 可选策略：
+3. **允许用户更新自己的文件**
+4. **允许用户删除自己的文件**
+
+**注意**：如果没有配置上传策略，会出现"row-level security policy"错误
 
 ## 测试上传
-创建完成后，图片和音乐上传功能即可正常工作。
+配置完成后，确保用户已登录，图片和音乐上传功能即可正常工作。
