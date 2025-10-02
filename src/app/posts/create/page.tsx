@@ -116,7 +116,7 @@ export default function CreatePostPage() {
         try {
           const fileExt = imageFile.name.split('.').pop()
           const fileName = `${Date.now()}_${Math.random()}.${fileExt}`
-          const filePath = `images/${fileName}`
+          const filePath = `photo/${fileName}`
           
           console.log('[Create Post] 图片上传路径:', filePath)
           
@@ -169,7 +169,7 @@ export default function CreatePostPage() {
         try {
           const fileExt = audioFile.name.split('.').pop()
           const fileName = `${Date.now()}_${Math.random()}.${fileExt}`
-          const filePath = `audio/${fileName}`
+          const filePath = `music/${fileName}`
           
           console.log('[Create Post] 音频上传路径:', filePath)
           

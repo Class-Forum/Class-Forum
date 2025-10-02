@@ -30,22 +30,43 @@ export default function SearchPage() {
     if (!query.trim()) return
     
     setLoading(true)
+    setResults([])
+    
     try {
-      // 这里应该调用实际的搜索API
-      // 目前我们模拟搜索结果
-      const response = await fetch('/api/posts')
+      console.log('[Search Page] 开始搜索:', { query })
+      
+      // 调用搜索API
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      
       if (!response.ok) {
-        throw new Error('搜索失败')
+        const errorData = await response.json()
+        console.error('[Search Page] 搜索API错误:', {
+          status: response.status,
+          error: errorData
+        })
+        throw new Error(errorData.details || '搜索失败')
       }
-      const allPosts: Post[] = await response.json()
-      // 模拟搜索逻辑：查找标题或内容中包含查询词的帖子
-      const filteredPosts = allPosts.filter(post => 
-        post.title.toLowerCase().includes(query.toLowerCase()) ||
-        post.content.toLowerCase().includes(query.toLowerCase())
-      )
-      setResults(filteredPosts)
+      
+      const searchResults: Post[] = await response.json()
+      console.log('[Search Page] 搜索结果数量:', searchResults.length)
+      
+      setResults(searchResults)
     } catch (error) {
-      console.error('搜索时出错:', error)
+      console.error('[Search Page] 搜索出错:', {
+        message: (error as Error).message,
+        stack: (error as Error).stack
+      })
+      // 可以在这里添加错误提示或者调用错误日志API
+      // await fetch('/api/log-error', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     error: (error as Error).message,
+      //     context: 'Search Page',
+      //     timestamp: new Date().toISOString(),
+      //     url: window.location.href
+      //   })
+      // })
     } finally {
       setLoading(false)
     }

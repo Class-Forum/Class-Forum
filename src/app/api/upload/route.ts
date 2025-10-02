@@ -84,7 +84,9 @@ export async function POST(request: NextRequest) {
     // 生成文件名和路径
     const fileExt = file.name.split('.').pop()
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`
-    const filePath = `${type}s/${fileName}`
+    // 根据文件类型确定存储文件夹
+    const folder = type === 'audio' ? 'music' : 'photo'
+    const filePath = `${folder}/${fileName}`
     
     console.log('[Upload API] 开始上传文件到Supabase:', {
       filePath: filePath,
