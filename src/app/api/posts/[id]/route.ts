@@ -186,10 +186,55 @@ export async function PUT(
     
     if (userError) {
       console.error('[Post Detail API] 用户查询错误:', userError)
-      return NextResponse.json({ 
-        error: '权限验证失败',
-        details: '无法验证用户权限'
-      }, { status: 500 })
+      
+      // 如果用户记录不存在，尝试创建用户记录
+      if (userError.code === 'PGRST116') {
+        console.log('[Post Detail API] 用户记录不存在，尝试创建用户记录')
+        const { data: newUser, error: createError } = await supabaseServer
+          .from('users')
+          .insert({
+            email: user.email!,
+            username: user.email!.split('@')[0], // 使用邮箱前缀作为用户名
+            password: 'temp_password', // 临时密码
+            role: 'user'
+          })
+          .select('id, role')
+          .single()
+        
+        if (createError) {
+          console.error('[Post Detail API] 创建用户记录失败:', createError)
+          return NextResponse.json({ 
+            error: '权限验证失败',
+            details: '无法创建用户记录'
+          }, { status: 500 })
+        }
+        
+        // 使用新创建的用户记录
+        const userData = newUser
+        
+        // 继续后续权限检查
+        const { data: authorData } = await supabaseServer
+          .from('users')
+          .select('email')
+          .eq('id', post.author_id)
+          .single()
+        
+        const isAuthor = authorData?.email === user.email
+        const isAdmin = userData?.role === 'admin'
+        
+        if (!isAuthor && !isAdmin) {
+          console.error('[Post Detail API] 权限不足:', { userEmail: user.email, authorEmail: authorData?.email, isAdmin })
+          return NextResponse.json({ 
+            error: '权限不足',
+            details: '只有帖子作者或管理员可以编辑帖子'
+          }, { status: 403 })
+        }
+      } else {
+        return NextResponse.json({ 
+          error: '权限验证失败',
+          details: '无法验证用户权限'
+        }, { status: 500 })
+      }
     }
     
     if (!userData) {
@@ -335,10 +380,55 @@ export async function DELETE(
     
     if (userError) {
       console.error('[Post Detail API] 用户查询错误:', userError)
-      return NextResponse.json({ 
-        error: '权限验证失败',
-        details: '无法验证用户权限'
-      }, { status: 500 })
+      
+      // 如果用户记录不存在，尝试创建用户记录
+      if (userError.code === 'PGRST116') {
+        console.log('[Post Detail API] 用户记录不存在，尝试创建用户记录')
+        const { data: newUser, error: createError } = await supabaseServer
+          .from('users')
+          .insert({
+            email: user.email!,
+            username: user.email!.split('@')[0], // 使用邮箱前缀作为用户名
+            password: 'temp_password', // 临时密码
+            role: 'user'
+          })
+          .select('id, role')
+          .single()
+        
+        if (createError) {
+          console.error('[Post Detail API] 创建用户记录失败:', createError)
+          return NextResponse.json({ 
+            error: '权限验证失败',
+            details: '无法创建用户记录'
+          }, { status: 500 })
+        }
+        
+        // 使用新创建的用户记录
+        const userData = newUser
+        
+        // 继续后续权限检查
+        const { data: authorData } = await supabaseServer
+          .from('users')
+          .select('email')
+          .eq('id', post.author_id)
+          .single()
+        
+        const isAuthor = authorData?.email === user.email
+        const isAdmin = userData?.role === 'admin'
+        
+        if (!isAuthor && !isAdmin) {
+          console.error('[Post Detail API] 权限不足:', { userEmail: user.email, authorEmail: authorData?.email, isAdmin })
+          return NextResponse.json({ 
+            error: '权限不足',
+            details: '只有帖子作者或管理员可以删除帖子'
+          }, { status: 403 })
+        }
+      } else {
+        return NextResponse.json({ 
+          error: '权限验证失败',
+          details: '无法验证用户权限'
+        }, { status: 500 })
+      }
     }
     
     if (!userData) {

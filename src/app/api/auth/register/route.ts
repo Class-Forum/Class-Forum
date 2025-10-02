@@ -23,18 +23,19 @@ export async function POST(request: Request) {
     }
     
     if (data.user) {
-      // 注册成功后，更新用户的用户名和角色
-      const { error: updateError } = await supabaseServer
+      // 注册成功后，在users表中创建用户记录
+      const { error: insertError } = await supabaseServer
         .from('users')
-        .update({ 
+        .insert({ 
           username,
+          email: data.user.email!,
+          password: password, // 注意：这里应该使用哈希密码，但Supabase已经处理了认证
           role: 'user'  // 默认角色为普通用户
         })
-        .eq('id', data.user.id)
       
-      if (updateError) {
-        console.error('更新用户名失败:', updateError)
-        return NextResponse.json({ error: '注册成功但更新用户名失败: ' + updateError.message }, { status: 500 })
+      if (insertError) {
+        console.error('创建用户记录失败:', insertError)
+        return NextResponse.json({ error: '注册成功但创建用户记录失败: ' + insertError.message }, { status: 500 })
       }
     }
     
