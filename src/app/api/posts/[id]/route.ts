@@ -187,6 +187,15 @@ export async function PUT(
     if (userError) {
       console.error('[Post Detail API] 用户查询错误:', userError)
       
+      // 如果users表不存在
+      if (userError.code === 'PGRST205') {
+        console.error('[Post Detail API] users表不存在，需要初始化数据库')
+        return NextResponse.json({ 
+          error: '数据库未初始化',
+          details: 'users表不存在，请先运行数据库迁移命令: npx prisma db push'
+        }, { status: 500 })
+      }
+      
       // 如果用户记录不存在，尝试创建用户记录
       if (userError.code === 'PGRST116') {
         console.log('[Post Detail API] 用户记录不存在，尝试创建用户记录')
@@ -380,6 +389,15 @@ export async function DELETE(
     
     if (userError) {
       console.error('[Post Detail API] 用户查询错误:', userError)
+      
+      // 如果users表不存在
+      if (userError.code === 'PGRST205') {
+        console.error('[Post Detail API] users表不存在，需要初始化数据库')
+        return NextResponse.json({ 
+          error: '数据库未初始化',
+          details: 'users表不存在，请先运行数据库迁移命令: npx prisma db push'
+        }, { status: 500 })
+      }
       
       // 如果用户记录不存在，尝试创建用户记录
       if (userError.code === 'PGRST116') {
