@@ -90,31 +90,48 @@ export default function CreatePostPage() {
     setError('')
 
     try {
+      console.log('[Create Post] 开始发布帖子流程')
+      
       // 获取当前用户信息
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
+        console.error('[Create Post] 用户未登录')
         throw new Error('请先登录')
       }
 
       const userId = session.user.id
+      console.log('[Create Post] 当前用户ID:', userId)
 
       // 准备帖子内容
       let finalContent = content;
 
       // 上传图片文件
       if (imageFile) {
+        console.log('[Create Post] 开始上传图片文件:', {
+          name: imageFile.name,
+          size: imageFile.size,
+          type: imageFile.type
+        })
+        
         try {
           const fileExt = imageFile.name.split('.').pop()
           const fileName = `${Date.now()}_${Math.random()}.${fileExt}`
           const filePath = `images/${fileName}`
+          
+          console.log('[Create Post] 图片上传路径:', filePath)
           
           const { error: uploadError } = await supabase.storage
             .from('files')
             .upload(filePath, imageFile)
             
           if (uploadError) {
+            console.error('[Create Post] 图片上传错误:', {
+              message: uploadError.message
+            })
             throw new Error('图片上传失败: ' + uploadError.message)
           }
+          
+          console.log('[Create Post] 图片上传成功')
           
           // 获取公共URL
           const { data } = supabase.storage
@@ -128,27 +145,46 @@ export default function CreatePostPage() {
             storageUrl
           )
             
+          console.log('[Create Post] 图片最终URL:', customUrl)
+          
           // 在内容中添加图片链接
           finalContent = `${finalContent}\n\n![图片](${customUrl})`
         } catch (uploadErr) {
+          console.error('[Create Post] 图片上传异常:', {
+            message: (uploadErr as Error).message,
+            stack: (uploadErr as Error).stack
+          })
           throw new Error('图片上传失败: ' + (uploadErr as Error).message)
         }
       }
 
       // 上传音频文件
       if (audioFile) {
+        console.log('[Create Post] 开始上传音频文件:', {
+          name: audioFile.name,
+          size: audioFile.size,
+          type: audioFile.type
+        })
+        
         try {
           const fileExt = audioFile.name.split('.').pop()
           const fileName = `${Date.now()}_${Math.random()}.${fileExt}`
           const filePath = `audio/${fileName}`
+          
+          console.log('[Create Post] 音频上传路径:', filePath)
           
           const { error: uploadError } = await supabase.storage
             .from('files')
             .upload(filePath, audioFile)
             
           if (uploadError) {
+            console.error('[Create Post] 音频上传错误:', {
+              message: uploadError.message
+            })
             throw new Error('音频上传失败: ' + uploadError.message)
           }
+          
+          console.log('[Create Post] 音频上传成功')
           
           // 获取公共URL
           const { data } = supabase.storage
@@ -162,14 +198,26 @@ export default function CreatePostPage() {
             storageUrl
           )
             
+          console.log('[Create Post] 音频最终URL:', customUrl)
+          
           // 在内容中添加音频链接
           finalContent = `${finalContent}\n\n[音频文件](${customUrl})`
         } catch (uploadErr) {
+          console.error('[Create Post] 音频上传异常:', {
+            message: (uploadErr as Error).message,
+            stack: (uploadErr as Error).stack
+          })
           throw new Error('音频上传失败: ' + (uploadErr as Error).message)
         }
       }
 
       // 创建帖子
+      console.log('[Create Post] 开始创建帖子', {
+        titleLength: title.length,
+        contentLength: finalContent.length,
+        categoryId: categoryId
+      })
+      
       const { data, error } = await supabase
         .from('posts')
         .insert({
@@ -182,14 +230,25 @@ export default function CreatePostPage() {
         .single()
 
       if (error) {
+        console.error('[Create Post] 数据库插入错误:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
         throw new Error(error.message)
       }
+
+      console.log('[Create Post] 帖子创建成功:', { postId: data.id })
 
       // 成功后跳转到新创建的帖子页面
       router.push(`/posts/${data.id}`)
       router.refresh()
     } catch (err) {
-      console.error('发布帖子失败:', err)
+      console.error('[Create Post] 发布帖子失败:', {
+        message: (err as Error).message,
+        stack: (err as Error).stack
+      })
       setError((err as Error).message || '发布帖子失败')
     } finally {
       setLoading(false)
