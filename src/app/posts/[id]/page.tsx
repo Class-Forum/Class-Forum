@@ -10,9 +10,12 @@ interface Post {
   title: string
   content: string
   author: {
+    id: number
     username: string
+    avatar?: string
   }
   category: {
+    id: number
     name: string
   }
   replies: {
@@ -36,6 +39,10 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
   const [newReply, setNewReply] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editContent, setEditContent] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -44,17 +51,19 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
         // 等待params解析
         const { id } = await params;
         
+        // 获取当前用户信息
+        const { data: { user } } = await supabase.auth.getUser()
+        setCurrentUser(user)
+        
         // 获取帖子详情
-        const postResponse = await fetch(`/api/posts`)
+        const postResponse = await fetch(`/api/posts/${id}`)
         if (!postResponse.ok) {
           throw new Error('获取帖子失败')
         }
-        const posts: Post[] = await postResponse.json()
-        const foundPost = posts.find(p => p.id === parseInt(id))
-        if (!foundPost) {
-          throw new Error('帖子未找到')
-        }
+        const foundPost: Post = await postResponse.json()
         setPost(foundPost)
+        setEditTitle(foundPost.title)
+        setEditContent(foundPost.content)
         
         // 获取回复
         const replyResponse = await fetch(`/api/posts/${id}/replies`)
@@ -117,6 +126,72 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
       console.error(err)
     }
   }
+
+  // 删除帖子
+  const handleDeletePost = async () => {
+    if (!confirm('确定要删除这个帖子吗？此操作不可撤销。')) {
+      return
+    }
+    
+    try {
+      const { id } = await params;
+      
+      const response = await fetch(`/api/posts/${id}`, {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) {
+        throw new Error('删除帖子失败')
+      }
+      
+      // 删除成功，跳转到首页
+      router.push('/')
+      router.refresh()
+    } catch (err) {
+      setError('删除帖子时出错')
+      console.error(err)
+    }
+  }
+
+  // 编辑帖子
+  const handleEditPost = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const { id } = await params;
+      
+      const response = await fetch(`/api/posts/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: editTitle,
+          content: editContent,
+          categoryId: post?.category.id
+        }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('更新帖子失败')
+      }
+      
+      const updatedPost = await response.json()
+      setPost({
+        ...post!,
+        title: updatedPost.title,
+        content: updatedPost.content
+      })
+      setIsEditing(false)
+      setError('')
+    } catch (err) {
+      setError('更新帖子时出错')
+      console.error(err)
+    }
+  }
+
+  // 检查当前用户是否有权限编辑/删除帖子
+  const canEditPost = currentUser && post && currentUser.id.toString() === post.author.id.toString()
 
   if (loading) {
     return (
@@ -234,13 +309,75 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
         
         <div className="bg-white overflow-hidden shadow rounded-lg mb-8">
           <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h1 className="text-3xl font-bold text-gray-900">{post.title}</h1>
+            <div className="flex justify-between items-start">
+              <div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="text-3xl font-bold text-gray-900 bg-gray-50 border border-gray-300 rounded px-2 py-1 w-full"
+                  />
+                ) : (
+                  <h1 className="text-3xl font-bold text-gray-900">{post.title}</h1>
+                )}
+              </div>
+              
+              {canEditPost && (
+                <div className="flex space-x-2">
+                  {isEditing ? (
+                    <>
+                      <button
+                        onClick={handleEditPost}
+                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                      >
+                        保存
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditing(false)
+                          setEditTitle(post.title)
+                          setEditContent(post.content)
+                        }}
+                        className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700"
+                      >
+                        取消
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                      >
+                        编辑
+                      </button>
+                      <button
+                        onClick={handleDeletePost}
+                        className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                      >
+                        删除
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            
             <div className="mt-2 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-gray-700 font-medium">{post.author.username.charAt(0)}</span>
-                  </div>
+                  {post.author.avatar ? (
+                    <img 
+                      src={post.author.avatar} 
+                      alt={post.author.username}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                      <span className="text-gray-700 font-medium">{post.author.username.charAt(0)}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-900">{post.author.username}</p>
@@ -255,21 +392,45 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
             </div>
           </div>
           <div className="px-4 py-5 sm:p-6">
-            <div className="prose max-w-none text-gray-700">
-              <ReactMarkdown 
-                components={{
-                  img: ({node, ...props}) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img {...props} className="max-w-full h-auto rounded" alt={props.alt || "图片"} />
-                  ),
-                  audio: ({node, ...props}) => (
-                    <audio {...props} controls className="w-full" />
-                  )
-                }}
-              >
-                {post.content}
-              </ReactMarkdown>
-            </div>
+            {isEditing ? (
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full h-64 p-3 border border-gray-300 rounded-md"
+                placeholder="输入帖子内容..."
+              />
+            ) : (
+              <div className="prose max-w-none text-gray-700">
+                <ReactMarkdown 
+                  components={{
+                    img: ({node, ...props}) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img {...props} className="max-w-full h-auto rounded-lg shadow-md my-4" alt={props.alt || "图片"} />
+                    ),
+                    audio: ({node, ...props}) => (
+                      <div className="my-4">
+                        <audio {...props} controls className="w-full" />
+                      </div>
+                    ),
+                    a: ({node, ...props}) => {
+                      // 如果是音频链接，显示为音频播放器
+                      if (props.href?.endsWith('.mp3') || props.href?.endsWith('.wav') || props.href?.endsWith('.ogg')) {
+                        return (
+                          <div className="my-4">
+                            <audio src={props.href} controls className="w-full" />
+                            <p className="text-sm text-gray-500 mt-1">{props.children}</p>
+                          </div>
+                        )
+                      }
+                      // 其他链接正常显示
+                      return <a {...props} className="text-blue-600 hover:text-blue-800" />
+                    }
+                  }}
+                >
+                  {post.content}
+                </ReactMarkdown>
+              </div>
+            )}
           </div>
         </div>
 
