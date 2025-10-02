@@ -129,8 +129,83 @@ export async function PUT(
       }, { status: 400 })
     }
     
+    // 获取当前用户信息
+    const authHeader = request.headers.get('Authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('[Post Detail API] 未提供认证令牌')
+      return NextResponse.json({ 
+        error: '认证失败',
+        details: '请先登录'
+      }, { status: 401 })
+    }
+    
+    const token = authHeader.substring(7)
+    
+    // 验证token并获取用户信息
+    const { data: { user }, error: authError } = await supabaseServer.auth.getUser(token)
+    
+    if (authError || !user) {
+      console.error('[Post Detail API] 认证失败:', authError)
+      return NextResponse.json({ 
+        error: '认证失败',
+        details: '无效的认证令牌'
+      }, { status: 401 })
+    }
+    
+    console.log('[Post Detail API] 当前用户ID:', user.id)
+    
+    // 检查帖子是否存在以及用户是否有权限编辑
+    const { data: post, error: postError } = await supabaseServer
+      .from('posts')
+      .select('author_id')
+      .eq('id', parseInt(id))
+      .single()
+    
+    if (postError) {
+      console.error('[Post Detail API] 帖子查询错误:', postError)
+      return NextResponse.json({ 
+        error: '帖子不存在',
+        details: postError.message
+      }, { status: 404 })
+    }
+    
+    if (!post) {
+      console.error('[Post Detail API] 帖子未找到')
+      return NextResponse.json({ 
+        error: '帖子未找到'
+      }, { status: 404 })
+    }
+    
+    // 检查用户权限：只有帖子作者或管理员可以编辑帖子
+    const { data: userData, error: userError } = await supabaseServer
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    
+    if (userError) {
+      console.error('[Post Detail API] 用户查询错误:', userError)
+      return NextResponse.json({ 
+        error: '权限验证失败',
+        details: userError.message
+      }, { status: 500 })
+    }
+    
+    const isAuthor = post.author_id.toString() === user.id
+    const isAdmin = userData?.role === 'admin'
+    
+    if (!isAuthor && !isAdmin) {
+      console.error('[Post Detail API] 权限不足:', { userId: user.id, authorId: post.author_id, isAdmin })
+      return NextResponse.json({ 
+        error: '权限不足',
+        details: '只有帖子作者或管理员可以编辑帖子'
+      }, { status: 403 })
+    }
+    
+    console.log('[Post Detail API] 权限验证通过，开始更新帖子')
+    
     // 更新帖子
-    const { data: post, error } = await supabaseServer
+    const { data: updatedPost, error: updateError } = await supabaseServer
       .from('posts')
       .update({
         title,
@@ -141,21 +216,21 @@ export async function PUT(
       .select()
       .single()
     
-    if (error) {
+    if (updateError) {
       console.error('[Post Detail API] 数据库更新错误:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
+        message: updateError.message,
+        details: updateError.details,
+        hint: updateError.hint,
+        code: updateError.code
       })
       return NextResponse.json({ 
         error: '更新帖子失败',
-        details: error.message
+        details: updateError.message
       }, { status: 500 })
     }
     
-    console.log('[Post Detail API] 帖子更新成功:', { postId: post.id })
-    return NextResponse.json(post)
+    console.log('[Post Detail API] 帖子更新成功:', { postId: updatedPost.id })
+    return NextResponse.json(updatedPost)
   } catch (error) {
     console.error('[Post Detail API] 未预期的错误:', {
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -187,22 +262,108 @@ export async function DELETE(
       }, { status: 400 })
     }
     
+    // 获取当前用户信息
+    const authHeader = request.headers.get('Authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('[Post Detail API] 未提供认证令牌')
+      return NextResponse.json({ 
+        error: '认证失败',
+        details: '请先登录'
+      }, { status: 401 })
+    }
+    
+    const token = authHeader.substring(7)
+    
+    // 验证token并获取用户信息
+    const { data: { user }, error: authError } = await supabaseServer.auth.getUser(token)
+    
+    if (authError || !user) {
+      console.error('[Post Detail API] 认证失败:', authError)
+      return NextResponse.json({ 
+        error: '认证失败',
+        details: '无效的认证令牌'
+      }, { status: 401 })
+    }
+    
+    console.log('[Post Detail API] 当前用户ID:', user.id)
+    
+    // 检查帖子是否存在以及用户是否有权限删除
+    const { data: post, error: postError } = await supabaseServer
+      .from('posts')
+      .select('author_id')
+      .eq('id', parseInt(id))
+      .single()
+    
+    if (postError) {
+      console.error('[Post Detail API] 帖子查询错误:', postError)
+      return NextResponse.json({ 
+        error: '帖子不存在',
+        details: postError.message
+      }, { status: 404 })
+    }
+    
+    if (!post) {
+      console.error('[Post Detail API] 帖子未找到')
+      return NextResponse.json({ 
+        error: '帖子未找到'
+      }, { status: 404 })
+    }
+    
+    // 检查用户权限：只有帖子作者或管理员可以删除帖子
+    const { data: userData, error: userError } = await supabaseServer
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    
+    if (userError) {
+      console.error('[Post Detail API] 用户查询错误:', userError)
+      return NextResponse.json({ 
+        error: '权限验证失败',
+        details: userError.message
+      }, { status: 500 })
+    }
+    
+    const isAuthor = post.author_id.toString() === user.id
+    const isAdmin = userData?.role === 'admin'
+    
+    if (!isAuthor && !isAdmin) {
+      console.error('[Post Detail API] 权限不足:', { userId: user.id, authorId: post.author_id, isAdmin })
+      return NextResponse.json({ 
+        error: '权限不足',
+        details: '只有帖子作者或管理员可以删除帖子'
+      }, { status: 403 })
+    }
+    
+    console.log('[Post Detail API] 权限验证通过，开始删除帖子')
+    
+    // 先删除帖子的所有回复（如果存在外键约束）
+    const { error: deleteRepliesError } = await supabaseServer
+      .from('replies')
+      .delete()
+      .eq('post_id', parseInt(id))
+    
+    if (deleteRepliesError) {
+      console.error('[Post Detail API] 删除回复失败:', deleteRepliesError)
+      // 继续删除帖子，因为回复可能已经被级联删除
+    }
+    
     // 删除帖子
-    const { error } = await supabaseServer
+    const { error: deleteError } = await supabaseServer
       .from('posts')
       .delete()
       .eq('id', parseInt(id))
     
-    if (error) {
+    if (deleteError) {
       console.error('[Post Detail API] 数据库删除错误:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
+        message: deleteError.message,
+        details: deleteError.details,
+        hint: deleteError.hint,
+        code: deleteError.code
       })
       return NextResponse.json({ 
         error: '删除帖子失败',
-        details: error.message
+        details: deleteError.message
       }, { status: 500 })
     }
     

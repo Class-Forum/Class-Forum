@@ -136,19 +136,32 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
     try {
       const { id } = await params;
       
+      // 获取当前用户的认证令牌
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        setError('请先登录')
+        router.push('/login')
+        return
+      }
+      
       const response = await fetch(`/api/posts/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
       })
       
       if (!response.ok) {
-        throw new Error('删除帖子失败')
+        const errorData = await response.json()
+        throw new Error(errorData.error || '删除帖子失败')
       }
       
       // 删除成功，跳转到首页
       router.push('/')
       router.refresh()
     } catch (err) {
-      setError('删除帖子时出错')
+      setError(err instanceof Error ? err.message : '删除帖子时出错')
       console.error(err)
     }
   }
@@ -160,10 +173,20 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
     try {
       const { id } = await params;
       
+      // 获取当前用户的认证令牌
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        setError('请先登录')
+        router.push('/login')
+        return
+      }
+      
       const response = await fetch(`/api/posts/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
           title: editTitle,
@@ -173,7 +196,8 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
       })
       
       if (!response.ok) {
-        throw new Error('更新帖子失败')
+        const errorData = await response.json()
+        throw new Error(errorData.error || '更新帖子失败')
       }
       
       const updatedPost = await response.json()
@@ -185,7 +209,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
       setIsEditing(false)
       setError('')
     } catch (err) {
-      setError('更新帖子时出错')
+      setError(err instanceof Error ? err.message : '更新帖子时出错')
       console.error(err)
     }
   }
